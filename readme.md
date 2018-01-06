@@ -58,7 +58,7 @@ The following curly bracket variables can be used in the `path` and `to` options
 * year — four digits year
 * month —  the padded _(ex. 01)_ number, 1-based
 * day —  the padded number, 1-based
-* # — unique file pattern [read more about it here](https://github.com/velocityzen/fsu)
+* \# — unique file pattern [read more about it here](https://github.com/velocityzen/fsu)
 
 plus any data that particular processor accepts with the files.
 
