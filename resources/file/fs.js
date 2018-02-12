@@ -4,7 +4,7 @@ const path = require('path');
 const fsu = require('fsu');
 
 const copy = function(o, cb) {
-  const dst = path.join(o.root, o.dst.to);
+  const dst = o.dst.to;
   fs.createReadStream(o.src.file)
     .on('error', cb)
     .pipe(fsu.createWriteStreamUnique(dst, { force: true }))

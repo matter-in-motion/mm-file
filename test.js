@@ -34,9 +34,10 @@ const app = createApp({
         'text/markdown'
       ],
 
+      to: '{filename}_copy_{name}_{_#}{ext}',
       do: [
-        { 'fs:copy': { name: 'copy', to: '{filename}_copy{_#}{ext}' } },
-        { 'fs:copy': { name: 'secondcopy', to: '{filename}_copy{_#}{ext}' } }
+        { 'fs:copy': { name: 'copy' } },
+        { 'fs:copy': { name: 'secondcopy' } }
       ]
     }
   }
