@@ -17,7 +17,10 @@ Controller.prototype.__init = function(units) {
   const settings = units.require('core.settings').require('file');
   this.processors = units.require('processors');
 
-  const defaults = Object.assign({ limit: 1 }, settings.defaults);
+  const defaults = Object.assign({
+    root: process.cwd(),
+    limit: 1
+  }, settings.defaults);
   for (let name in settings) {
     if (name === 'defaults') {
       continue;

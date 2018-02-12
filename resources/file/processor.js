@@ -84,11 +84,11 @@ Processor.prototype.done = function(err, result, next) {
 };
 
 Processor.prototype.getDestination = function(job, fieldname, filename, ext) {
-  const fullPath = this.pathRender(path.join(this.job.path, job.to), { name: job.name }, this.data, {
+  const fullPath = this.pathRender(path.join(this.job.path, job.to || this.job.to), { name: job.name }, this.data, {
     fieldname, filename, ext
   });
-  //cleanup from unsecured unwanted symbols.
-  return Object.assign({}, job, { to: sanitize(fullPath) });
+  //cleanup from unsecured unwanted symbols and makes path absolute
+  return Object.assign({}, job, { to: path.join(this.job.root, sanitize(fullPath)) });
 };
 
 Processor.prototype.pathRender = function(string, ...args) {
