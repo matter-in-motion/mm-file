@@ -18,6 +18,7 @@ You can upload files via [FormData](https://developer.mozilla.org/en-US/docs/Web
 * defaults — object, any default options. Will be applied to the jobs.
 * **jobname** — object, job declaration
   - path — string, relative to the `root` path to save files to
+  - to — string, default filename. Will be applied if action options doesn't have the `to` option
   - limit — number, maximum files to be accepted
   - **accept** — array, list of the mime types accepted by this job
   - **do** — array, list of action to be applied to each file
