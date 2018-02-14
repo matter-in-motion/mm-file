@@ -5,7 +5,7 @@ const FormData = require('form-data');
 const test = require('ava');
 const del = require('del');
 const extension = require('./index');
-const createApp = require('mm-test').createApp;
+const { createApp, getToken } = require('mm-test');
 const getRawBody = require('raw-body');
 
 process.env.NODE_ENV = 'production';
@@ -25,7 +25,8 @@ const app = createApp({
   file: {
     defaults: {
       root: path.join(__dirname, 'uploads'),
-      path: '../{year}'
+      path: '{year}',
+      limit: 2
     },
 
     test: {
@@ -34,7 +35,7 @@ const app = createApp({
         'text/markdown'
       ],
 
-      to: '{filename}_copy_{name}_{_#}{ext}',
+      to: '{filename}_{name}{_#}{ext}',
       do: [
         { 'fs:copy': { name: 'copy' } },
         { 'fs:copy': { name: 'secondcopy' } }
@@ -43,19 +44,26 @@ const app = createApp({
   }
 });
 
-const sendFile = function(file) {
+const sendFile = function(files, opts = {}) {
   const form = new FormData();
   form.append('job', 'test');
   form.append('some', 'data');
-  form.append('0', fs.createReadStream(file));
-  form.append('test', fs.createReadStream('./README.md'));
+
+  for (const i in files) {
+    form.append(i, fs.createReadStream(files[i]));
+  }
+
+  const headers = { 'MM': '{"call":"file.process"}' };
+  if (opts.auth) {
+    headers.Authorization = 'Bearer ' + opts.auth;
+  }
 
   return new Promise((resolve, reject) => {
     form.submit({
       host: 'localhost',
       port: 3333,
       path: '/api',
-      headers: { 'MM': '{"call":"file.process"}' }
+      headers
     }, (err, res) => {
       if (err) {
         return reject(err);
@@ -80,16 +88,41 @@ const sendFile = function(file) {
   });
 }
 
-test('checks the file parser', t => sendFile('assets/test.jpg')
+test('fails to send unauthorized request', t => sendFile([ 'assets/test.jpg' ])
+  .then(res => {
+    const err = res[0];
+    t.is(err.code, 4100);
+    t.falsy(res[1]);
+  })
+);
+
+test('fails to send too many files', t => getToken(app)
+  .then(token => sendFile([
+    'assets/test.jpg',
+    './readme.md',
+    './LICENSE.md'
+  ], { auth: token.token }))
+  .then(res => {
+    const err = res[0];
+    t.is(err.code, 4220);
+    t.falsy(res[1]);
+  })
+);
+
+test('checks the file parser', t => getToken(app)
+  .then(token => sendFile([
+    'assets/test.jpg',
+    './readme.md'
+  ], { auth: token.token }))
   .then(res => {
     t.is(res[0], '');
     t.truthy(res[1]);
     const first = res[1][0];
     t.is(first.copy.url, '2018/test_copy.jpg');
-    t.is(first.secondcopy.url, '2018/test_copy_1.jpg');
+    t.is(first.secondcopy.url, '2018/test_secondcopy.jpg');
     const second = res[1][1];
     t.is(second.copy.url, '2018/readme_copy.md');
-    t.is(second.secondcopy.url, '2018/readme_copy_1.md');
+    t.is(second.secondcopy.url, '2018/readme_secondcopy.md');
     t.pass();
   })
 );
