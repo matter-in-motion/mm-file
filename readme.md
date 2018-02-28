@@ -7,7 +7,9 @@ This extension adds a __file__ resource.
 
 ## Usage
 
-[Extensions installation instructions](https://github.com/matter-in-motion/mm/blob/master/docs/extensions.md). It validates file type **before** downloading file.
+[Extensions installation instructions](https://github.com/matter-in-motion/mm/blob/master/docs/extensions.md).
+
+This extension validates file type **before** downloading file.
 
 ## File upload
 
