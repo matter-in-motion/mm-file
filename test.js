@@ -1,26 +1,16 @@
 'use strict';
-const fs = require('fs');
 const path = require('path');
-const FormData = require('form-data');
 const test = require('ava');
 const del = require('del');
 const extension = require('./index');
-const { createApp, getToken } = require('mm-test');
-const getRawBody = require('raw-body');
+const { createApp, createClient, getToken } = require('mm-test');
 
 process.env.NODE_ENV = 'production';
 
 test.after.always(() => del([ './uploads' ]));
 
 const app = createApp({
-  extensions: [
-    'http',
-    extension
-  ],
-
-  http: {
-    port: 3333
-  },
+  extensions: [ extension ],
 
   file: {
     defaults: {
@@ -42,87 +32,38 @@ const app = createApp({
       ]
     }
   }
-});
+}, { auth: 'user' });
 
-const sendFile = function(files, opts = {}) {
-  const form = new FormData();
-  form.append('job', 'test');
-  form.append('some', 'data');
+const mm = createClient();
+const sendFile = (files, meta) => mm('file.process', { job: 'test' }, { files, meta })
 
-  for (const i in files) {
-    form.append(i, fs.createReadStream(files[i]));
-  }
-
-  const headers = { 'MM': '{"call":"file.process"}' };
-  if (opts.auth) {
-    headers.Authorization = 'Bearer ' + opts.auth;
-  }
-
-  return new Promise((resolve, reject) => {
-    form.submit({
-      host: 'localhost',
-      port: 3333,
-      path: '/api',
-      headers
-    }, (err, res) => {
-      if (err) {
-        return reject(err);
-      }
-
-      const status = res.statusCode;
-      if (status >= 400) {
-        return reject({
-          status: res.statusCode,
-          message: res.statusMessage
-        });
-      }
-
-      getRawBody(res, (err, string) => {
-        if (err) {
-          return reject(err);
-        }
-
-        return resolve(JSON.parse(string));
-      });
-    });
-  });
-}
-
-test('fails to send unauthorized request', t => sendFile([ 'assets/test.jpg' ])
-  .then(res => {
-    const err = res[0];
-    t.is(err.code, 4100);
-    t.falsy(res[1]);
-  })
+test.skip('fails to send unauthorized request', t => sendFile([ 'assets/test.jpg' ])
+  .then(() => t.fail())
+  .catch(err => t.is(err.code, 4100))
 );
 
-test('fails to send too many files', t => getToken(app)
+test('fails to send too many files', t => getToken(app, { provider: 'user' })
   .then(token => sendFile([
     'assets/test.jpg',
     './readme.md',
     './LICENSE.md'
-  ], { auth: token.token }))
-  .then(res => {
-    const err = res[0];
-    t.is(err.code, 4220);
-    t.falsy(res[1]);
-  })
+  ], token.token))
+  .then(() => t.fail())
+  .catch(err => t.is(err.code, 4220))
 );
 
-test('checks the file parser', t => getToken(app)
+test('checks the file parser', t => getToken(app, { provider: 'user' })
   .then(token => sendFile([
     'assets/test.jpg',
     './readme.md'
-  ], { auth: token.token }))
+  ], token.token))
   .then(res => {
-    t.is(res[0], '');
-    t.truthy(res[1]);
-    const first = res[1][0];
+    t.truthy(res);
+    const first = res[0];
     t.is(first.copy.url, '2018/test_copy.jpg');
     t.is(first.secondcopy.url, '2018/test_secondcopy.jpg');
-    const second = res[1][1];
+    const second = res[1];
     t.is(second.copy.url, '2018/readme_copy.md');
     t.is(second.secondcopy.url, '2018/readme_secondcopy.md');
-    t.pass();
   })
 );
