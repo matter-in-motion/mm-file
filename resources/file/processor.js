@@ -15,16 +15,27 @@ const Processor = function(processors, job, data) {
   this.job = job;
   this.data = data;
 
+  this.error = undefined;
   this.result = [];
   this.resCounter = {};
   this.index = 0;
 };
 
 Processor.prototype.start = function(files) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     this.q = new Q(1)
-      .on('done', (err, res, next) => this.done(err, res, next))
-      .on('drain', () => resolve(this.result));
+      .on('done', (res, next) => this.done(res, next))
+      .on('error', err => {
+        this.error = err;
+        this.q.abort();
+      })
+      .on('drain', () => {
+        if (this.error) {
+          reject(this.error);
+        } else {
+          resolve(this.result);
+        }
+      });
 
     files.forEach(file => this.push(file));
   });
@@ -66,7 +77,7 @@ Processor.prototype._push = function(processor, method, args) {
   });
 };
 
-Processor.prototype.done = function(err, result, next) {
+Processor.prototype.done = function(result, next) {
   if (result) {
     let res = this.result[result.id][result.name || this.resCounter[result.id]] = result.data || {};
 
@@ -74,9 +85,6 @@ Processor.prototype.done = function(err, result, next) {
       res.url = result.relative.replace('\\', '/');
     }
 
-    if (err) {
-      res.error = err;
-    }
     this.resCounter[result.id]++;
   }
 
