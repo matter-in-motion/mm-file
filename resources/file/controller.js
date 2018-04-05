@@ -21,6 +21,9 @@ Controller.prototype.__init = function(units) {
     root: process.cwd(),
     limit: 1
   }, settings.defaults);
+
+  this.limits = defaults.limits;
+
   for (let name in settings) {
     if (name === 'defaults') {
       continue;
@@ -38,7 +41,6 @@ Controller.prototype.parse = function(req) {
     } catch (e) {
       reject(errors.UnsupportedMedia(e));
     }
-
     const result = {
       fields: {},
       files: []
@@ -87,7 +89,13 @@ Controller.prototype.parse = function(req) {
           });
         });
       })
-      .on('finish', () => resolve(result));
+      .on('finish', () => {
+        if (!result.files.length) {
+          return reject(errors.NoFilesInRequest());
+        }
+
+        resolve(result);
+      });
 
     req.pipe(parser);
   });
