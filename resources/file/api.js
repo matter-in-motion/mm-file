@@ -7,7 +7,6 @@ module.exports = {
   process: function() {
     return {
       auth: {
-        provider: 'user',
         required: true
       },
       title: 'File',
@@ -16,7 +15,7 @@ module.exports = {
       request: this.getRequestSchema(),
       response: this.getResponseSchema(),
 
-      call: (req, auth) => this.parse(req)
+      call: (auth, msg) => this.parse(msg.original)
         .then(data => this.validate(auth, data.job, data.fields, data.files))
         .then(data => this.process(auth, data.job, data.fields, data.files))
         .catch(errors.ifError('BadRequest'))
