@@ -35,12 +35,10 @@ this.file = {
   },
 
   test: {
-    path: '{year}'
-    accept: [
-      'image/jpeg'
-    ],
+    path: '{year}',
+    accept: [ 'image/jpeg' ],
     do: [
-      { 'fs:copy': { name: 'copy', to: '{filename}_{copy}{_#}{ext}' } },
+      { 'fs:copy': { name: 'copy', to: '{filename}_{copy}{_#}{ext}' } }
     ]
   }
 };
@@ -48,7 +46,7 @@ this.file = {
 
 ### Processor action options
 
-All actions have only two common
+All actions have only two common options: `name` and `to`.
 
 ### Path patterns
 

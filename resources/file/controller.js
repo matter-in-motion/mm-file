@@ -139,7 +139,10 @@ Controller.prototype.getRequestSchema = function() {
 
 Controller.prototype.getResponseSchema = function() {
   return {
-    type: 'object'
+    type: 'array',
+    items: {
+      type: 'object'
+    }
   };
 };
 
