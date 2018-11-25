@@ -6,7 +6,7 @@ const rxDots = /\.{2,}/g;
 const rxRemove = /{([^}]+)}|[^_a-z0-9./\\]+/gi;
 const rxFSUPattern = /^{[_a-z0-9.-]*#+[_a-z0-9.-]*}$/;
 
-const sanitize = function(filename, limit) {
+function sanitize(filename, limit) {
   const sanitized = unidecode(filename)
     .replace(rxWhiteSpace, '_')
     .replace(rxDots, '')
@@ -14,15 +14,19 @@ const sanitize = function(filename, limit) {
     .toLowerCase();
 
   return sanitized.substr(0, limit || 250);
-};
+}
 
-const render = function(string, data) {
+function renderTemplate(string, data) {
   const re = /{([^}#_]+)}/;
   let match;
   while (match = re.exec(string)) {
     string = string.replace(match[0], data[match[1]])
   }
   return string;
-};
+}
 
-module.exports = { sanitize, render };
+function padNumber(num) {
+  return num < 10 ? '0' + num : num;
+}
+
+module.exports = { sanitize, renderTemplate, padNumber };

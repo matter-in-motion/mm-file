@@ -2,13 +2,7 @@
 const path = require('path');
 const Q = require('queueue');
 const Promise = require('bluebird');
-const util = require('./util');
-const render = util.render;
-const sanitize = util.sanitize;
-
-const padNumber = function(num) {
-  return num < 10 ? '0' + num : num;
-};
+const { renderTemplate, sanitize, padNumber } = require('./util');
 
 const Processor = function(processors, job, data) {
   this.processors = processors;
@@ -92,7 +86,7 @@ Processor.prototype.done = function(result, next) {
 };
 
 Processor.prototype.getDestination = function(job, fieldname, filename, ext) {
-  const fullPath = this.pathRender(path.join(this.job.path, job.to || this.job.to), { name: job.name }, this.data, {
+  const fullPath = this.pathRender(job.to || this.job.to, { name: job.name }, this.data, {
     fieldname, filename, ext
   });
   //cleanup from unsecured unwanted symbols and makes path absolute
@@ -106,7 +100,7 @@ Processor.prototype.pathRender = function(string, ...args) {
     month: padNumber(today.getMonth() + 1),
     day: padNumber(today.getDate())
   }, ...args);
-  return render(string, data);
+  return renderTemplate(string, data);
 };
 
 

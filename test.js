@@ -15,7 +15,6 @@ const app = createApp({
   file: {
     defaults: {
       root: path.join(__dirname, 'uploads'),
-      path: '{year}',
       limit: 2
     },
 
@@ -24,8 +23,7 @@ const app = createApp({
         'image/jpeg',
         'text/markdown'
       ],
-
-      to: '{filename}_{name}{_#}{ext}',
+      to: '{year}/{filename}_{name}{_#}{ext}',
       do: [
         { 'fs:copy': { name: 'copy' } },
         { 'fs:copy': { name: 'secondcopy' } }
